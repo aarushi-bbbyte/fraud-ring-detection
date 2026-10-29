@@ -49,7 +49,7 @@ flowchart LR
     neo --> evalr["Evaluation & sweeps"] --> results[("results/<br/>CSV + plots")]
     neo --> api["FastAPI"]
     results --> api
-    api -- "REST + server-sent events" --> ui["React dashboard<br/>(Cytoscape.js)"]
+    api -- "REST + server-sent events" --> ui["React dashboard<br/>(react-force-graph)"]
 ```
 
 Everything runs locally with Docker Compose: `neo4j`, `api`, `frontend` (nginx), plus
@@ -266,7 +266,7 @@ backend/fraudring/
   simulate.py   synthetic ring injection with targeted detection
   replay.py     time-ordered transaction replay for the live feed
 backend/tests/  parser, rule, ring and API tests
-frontend/       React + Vite dashboard (Cytoscape.js), served by nginx
+frontend/       React + Vite dashboard (react-force-graph, Framer Motion), served by nginx
 results/        evaluation CSVs and plots
 scripts/        db-tests.sh
 ```
