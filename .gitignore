@@ -1,0 +1,28 @@
+# Data (downloaded separately from Kaggle) and derived caches
+data/raw/
+data/processed/
+
+# Secrets
+.env
+
+# Project-local pip/npm caches
+.cache/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Node (.npmrc holds a machine-specific cache path)
+node_modules/
+dist/
+.npmrc
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

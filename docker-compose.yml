@@ -1,0 +1,34 @@
+services:
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: fraud-neo4j
+    ports:
+      - "${NEO4J_HTTP_PORT:-7474}:7474"
+      - "${NEO4J_BOLT_PORT:-7687}:7687"
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:?set NEO4J_PASSWORD in .env}
+      # Downloads the Graph Data Science plugin matching this Neo4j version on first start.
+      NEO4J_PLUGINS: '["graph-data-science"]'
+      NEO4J_dbms_security_procedures_unrestricted: gds.*
+      NEO4J_dbms_security_procedures_allowlist: gds.*
+      # Sized for an 8 GB laptop; raise these in .env if you have more RAM.
+      NEO4J_server_memory_heap_initial__size: ${NEO4J_HEAP:-1536m}
+      NEO4J_server_memory_heap_max__size: ${NEO4J_HEAP:-1536m}
+      NEO4J_server_memory_pagecache_size: ${NEO4J_PAGECACHE:-1g}
+      # The bulk loader writes 10k-row batches; a larger transaction memory cap avoids spurious failures.
+      NEO4J_db_memory_transaction_total_max: 1g
+    volumes:
+      - neo4j-data:/data
+      - neo4j-plugins:/plugins
+      - neo4j-logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+volumes:
+  neo4j-data:
+  neo4j-plugins:
+  neo4j-logs:
