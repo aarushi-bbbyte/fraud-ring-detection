@@ -217,7 +217,10 @@ def create_app(driver: Driver | None = None) -> FastAPI:
                 "fans": read_csv(RESULTS_DIR / "sweep_fans.csv"),
                 "cycle_tolerance": read_csv(RESULTS_DIR / "sweep_cycle_tolerance.csv"),
             },
-            "ml": read_csv(RESULTS_DIR / "ml_metrics.csv"),
+            "ml": {
+                "metrics": read_csv(RESULTS_DIR / "ml_metrics.csv"),
+                "importance": read_csv(RESULTS_DIR / "ml_feature_importance.csv"),
+            },
             "images": sorted(p.name for p in RESULTS_DIR.glob("*.png")) if RESULTS_DIR.exists() else [],
         }
 

@@ -6,7 +6,7 @@ const pct = (v) => (v === "" || v == null ? "–" : `${(v * 100).toFixed(1)}%`);
 // Static charts produced by the evaluation scripts, served from results/.
 const CHARTS = [
   ["rule_eval_by_pattern.png", "Rule recall by laundering pattern"],
-  ["ml_comparison.png", "Model comparison: tabular vs tabular + graph features"],
+  ["ml_pr_curve.png", "Account risk model: tabular vs tabular + graph features"],
   ["sweep_cycles.png", "Cycle rule threshold sweep"],
   ["sweep_fans.png", "Fan rule threshold sweep"],
 ];
@@ -82,17 +82,44 @@ export default function Metrics() {
         </tbody>
       </table>
 
-      {m.ml.length > 0 && (
+      {m.ml.metrics.length > 0 && (
         <>
-          <h2>Risk model (RQ1): do graph features help?</h2>
+          <h2>Account risk model (RQ1): do graph features help?</h2>
           <table>
             <thead>
-              <tr>{Object.keys(m.ml[0]).map((k) => <th key={k}>{k}</th>)}</tr>
+              <tr>
+                <th>Model</th><th className="num">Features</th><th className="num">Precision</th>
+                <th className="num">Recall</th><th className="num">F1</th><th className="num">PR-AUC</th>
+              </tr>
             </thead>
             <tbody>
-              {m.ml.map((r, i) => (
-                <tr key={i}>{Object.values(r).map((v, j) => <td key={j}>{typeof v === "number" ? v.toFixed(3) : v}</td>)}</tr>
+              {m.ml.metrics.map((r) => (
+                <tr key={r.model}>
+                  <td>{r.model}</td>
+                  <td className="num">{r.features}</td>
+                  <td className="num">{pct(r.precision)}</td>
+                  <td className="num">{pct(r.recall)}</td>
+                  <td className="num">{pct(r.f1)}</td>
+                  <td className="num">{r.pr_auc.toFixed(3)}</td>
+                </tr>
               ))}
+            </tbody>
+          </table>
+          <p className="muted">
+            XGBoost with default settings, held-out 20% of {m.ml.metrics[0].test_accounts.toLocaleString()} accounts
+            ({m.ml.metrics[0].test_positives.toLocaleString()} positive). Threshold 0.5.
+          </p>
+          <h2>Top features (tabular + graph model, share of total gain)</h2>
+          <table>
+            <tbody>
+              {m.ml.importance
+                .filter((r) => r.model === "tabular + graph")
+                .map((r) => (
+                  <tr key={r.feature}>
+                    <td>{r.rank}. {r.feature}</td>
+                    <td className="num">{pct(r.gain_share)}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </>
