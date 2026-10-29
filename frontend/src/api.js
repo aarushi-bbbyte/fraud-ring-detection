@@ -26,9 +26,28 @@ export const api = {
   resultImage: (name) => `${BASE}/results/${name}`,
 };
 
-export const usd = (v) =>
-  v == null ? "–" : v.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-
-export const time = (iso) => (iso ? iso.replace("T", " ").slice(0, 16) : "–");
-
-export const RULE_LABEL = { cycle: "Cycle", fan_in: "Fan-in", fan_out: "Fan-out" };
+/**
+ * Sum of total_usd over all alerts, for the "money flagged" counter.
+ * The API has no aggregate for this, so it pages through /alerts once and
+ * caches the result for the browser session.
+ */
+export async function flaggedVolume(totalAlerts) {
+  const key = `flagged-usd:${totalAlerts}`;
+  try {
+    const cached = sessionStorage.getItem(key);
+    if (cached) return Number(cached);
+  } catch {
+    /* storage unavailable: just recompute */
+  }
+  let sum = 0;
+  for (let offset = 0; offset < totalAlerts; offset += 500) {
+    const page = await api.alerts({ limit: 500, offset });
+    sum += page.items.reduce((s, a) => s + (a.total_usd ?? 0), 0);
+  }
+  try {
+    sessionStorage.setItem(key, String(sum));
+  } catch {
+    /* ignore */
+  }
+  return sum;
+}
