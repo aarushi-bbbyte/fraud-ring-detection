@@ -82,9 +82,21 @@ It writes `results/sweep_*.csv` and `results/sweep_*.png`. The defaults above
 sit at the knee of those curves. The reasoning is recorded in
 `backend/fraudring/detection/config.py`.
 
+## Dashboard
+
+`docker compose up -d --build` starts Neo4j, the API and the dashboard at http://localhost:8080.
+
+Demo: pick a pattern next to **Simulate fraud ring** and click it. A synthetic ring is
+written into the graph and detected within seconds. A banner links to the new ring,
+the alert appears at the top of *Alerts → Most recent first*, and its transfers
+show up highlighted in the *Live feed*. `DELETE /simulate` (or `curl -X DELETE
+localhost:8000/simulate`) removes all synthetic data again.
+
+For frontend development: `cd frontend && npm install && npm run dev` (proxies `/api` to port 8000).
+
 ## API
 
-`docker compose up -d` starts Neo4j and the API on http://localhost:8000 (docs at `/docs`).
+The API runs on http://localhost:8000 (docs at `/docs`).
 For local development, run `uvicorn fraudring.api.app:app --reload` from `backend/`.
 
 | Endpoint | Purpose |
