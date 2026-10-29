@@ -1,0 +1,21 @@
+model,rank,feature,gain_share
+tabular,1,n_currencies,0.3432
+tabular,2,usd_in_total,0.1902
+tabular,3,usd_out_mean,0.1249
+tabular,4,distinct_in,0.0721
+tabular,5,n_formats,0.0545
+tabular,6,distinct_out,0.0534
+tabular,7,n_in,0.0435
+tabular,8,n_out,0.042
+tabular,9,usd_in_mean,0.0399
+tabular,10,usd_out_total,0.0363
+tabular + graph,1,n_currencies,0.2713
+tabular + graph,2,usd_in_total,0.1317
+tabular + graph,3,usd_out_mean,0.0973
+tabular + graph,4,flagged_fan_in,0.0671
+tabular + graph,5,flagged_fan_out,0.0616
+tabular + graph,6,in_ring,0.054
+tabular + graph,7,distinct_out,0.0453
+tabular + graph,8,n_formats,0.0436
+tabular + graph,9,distinct_in,0.0427
+tabular + graph,10,flagged_cycle,0.037
