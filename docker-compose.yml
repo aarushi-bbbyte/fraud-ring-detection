@@ -46,6 +46,14 @@ services:
     volumes:
       - ./results:/results:ro
 
+  frontend:
+    build: ./frontend
+    container_name: fraud-frontend
+    depends_on:
+      - api
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
   # Throwaway instance for pytest: tests wipe it freely, so they never touch the
   # loaded dataset. Never run it alongside `neo4j`: together they exceed a 4 GB
   # Docker VM. scripts/db-tests.sh stops the main database first.
