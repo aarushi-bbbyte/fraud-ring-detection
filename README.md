@@ -82,6 +82,23 @@ It writes `results/sweep_*.csv` and `results/sweep_*.png`. The defaults above
 sit at the knee of those curves. The reasoning is recorded in
 `backend/fraudring/detection/config.py`.
 
+## API
+
+`docker compose up -d` starts Neo4j and the API on http://localhost:8000 (docs at `/docs`).
+For local development, run `uvicorn fraudring.api.app:app --reload` from `backend/`.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /alerts?sort=risk\|recent&rule=` | alerts with reasons, ranked by risk |
+| `GET /rings/{id}` | ring accounts, alerts and money-flow edges, for graph visualisation |
+| `GET /accounts/{id}` | account details, reasons it was flagged, recent neighbourhood |
+| `GET /metrics` | graph counts and the evaluation results from `results/` |
+| `POST /simulate/ring` `{"pattern": "cycle"\|"fan_in"\|"fan_out"}` | injects a synthetic ring and detects it within seconds |
+| `DELETE /simulate` | removes all synthetic data |
+| `GET /stream/transactions?start=&rate=` | live feed (server-sent events) replaying transactions in time order, flagged ones tagged |
+
+`python -m fraudring.replay --start 2022-09-05 --rate 20` prints the same feed in the terminal.
+
 ## Tests
 
 Unit tests need nothing running. The rule tests use a separate, throwaway Neo4j
