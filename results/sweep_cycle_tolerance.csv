@@ -1,0 +1,4 @@
+amount_tolerance,max_hops,window_h,captured,capture_pct,slice_seconds,slice_cycles,slice_laundering_cycles
+0.1,12,96.0,40,74.1,24.7,38,12
+0.2,12,96.0,47,87.0,16.1,61,21
+0.3,12,96.0,47,87.0,18.5,101,33
