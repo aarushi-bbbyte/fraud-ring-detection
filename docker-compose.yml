@@ -31,6 +31,21 @@ services:
       retries: 30
       start_period: 30s
 
+  api:
+    build: ./backend
+    container_name: fraud-api
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?set NEO4J_PASSWORD in .env}
+    volumes:
+      - ./results:/results:ro
+
   # Throwaway instance for pytest: tests wipe it freely, so they never touch the
   # loaded dataset. Never run it alongside `neo4j`: together they exceed a 4 GB
   # Docker VM. scripts/db-tests.sh stops the main database first.
