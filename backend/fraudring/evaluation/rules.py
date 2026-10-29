@@ -19,7 +19,6 @@ Usage (from backend/, after ``python -m fraudring.detection.run``):
 
 from __future__ import annotations
 
-import csv
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -29,10 +28,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from fraudring.config import REPO_ROOT  # noqa: E402
 from fraudring.db import get_driver  # noqa: E402
+from fraudring.results import RESULTS_DIR as RESULTS, REPO_ROOT, write_csv  # noqa: E402
 
-RESULTS = REPO_ROOT / "results"
 RULES = ["cycle", "fan_in", "fan_out"]
 ALL_RULES = "any rule"
 UNTYPED = "(untyped)"
@@ -104,15 +102,6 @@ def by_pattern(flagged: dict[str, set[int]], labels: dict) -> list[dict]:
             row["attempt_recall_any_rule"] = ""
         rows.append(row)
     return rows
-
-
-def write_csv(rows: list[dict], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=list(rows[0]))
-        writer.writeheader()
-        writer.writerows(rows)
-    print(f"wrote {path.relative_to(REPO_ROOT)}")
 
 
 def plot_heatmap(rows: list[dict], path: Path) -> None:

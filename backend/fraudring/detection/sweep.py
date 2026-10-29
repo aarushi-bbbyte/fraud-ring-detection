@@ -28,7 +28,6 @@ Usage (from backend/):
 from __future__ import annotations
 
 import argparse
-import csv
 import sys
 import time
 from collections import defaultdict
@@ -42,14 +41,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from neo4j import Driver  # noqa: E402
 
-from fraudring.config import REPO_ROOT  # noqa: E402
 from fraudring.db import get_driver  # noqa: E402
 from fraudring.detection.config import RuleConfig  # noqa: E402
 from fraudring.detection.cycles import find_cycles  # noqa: E402
 from fraudring.detection.degrees import degrees_missing, update_degrees  # noqa: E402
 from fraudring.detection.fans import find_fans  # noqa: E402
+from fraudring.results import RESULTS_DIR as RESULTS, REPO_ROOT, read_csv, write_csv  # noqa: E402
 
-RESULTS = REPO_ROOT / "results"
 
 CYCLE_HOPS = [4, 6, 8, 10, 12]
 CYCLE_WINDOWS = [24.0, 48.0, 72.0, 96.0, 120.0]
@@ -212,29 +210,6 @@ def sweep_fans(driver: Driver, base: RuleConfig) -> list[dict]:
 
 
 # --- output -------------------------------------------------------------------
-
-def write_csv(rows: list[dict], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=list(rows[0]))
-        writer.writeheader()
-        writer.writerows(rows)
-    print(f"wrote {path.relative_to(REPO_ROOT)}")
-
-
-def read_csv(path: Path) -> list[dict]:
-    """Read a sweep CSV back with numeric columns as numbers."""
-    def num(v: str):
-        try:
-            return int(v)
-        except ValueError:
-            try:
-                return float(v)
-            except ValueError:
-                return v
-    with path.open(newline="", encoding="utf-8") as f:
-        return [{k: num(v) for k, v in row.items()} for row in csv.DictReader(f)]
-
 
 def style(ax, title: str, xlabel: str, ylabel: str) -> None:
     ax.set_title(title, loc="left", fontsize=11, color=INK)
