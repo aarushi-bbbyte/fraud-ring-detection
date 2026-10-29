@@ -14,6 +14,8 @@ SCHEMA_STATEMENTS = [
     "CREATE INDEX sent_timestamp IF NOT EXISTS FOR ()-[s:SENT]-() ON (s.timestamp)",
     "CREATE INDEX sent_tx_id IF NOT EXISTS FOR ()-[s:SENT]-() ON (s.tx_id)",
     "CREATE INDEX sent_pattern IF NOT EXISTS FOR ()-[s:SENT]-() ON (s.pattern)",
+    "CREATE CONSTRAINT alert_id IF NOT EXISTS FOR (a:Alert) REQUIRE a.id IS UNIQUE",
+    "CREATE CONSTRAINT ring_id IF NOT EXISTS FOR (r:Ring) REQUIRE r.id IS UNIQUE",
 ]
 
 
