@@ -53,8 +53,44 @@ produces partial laundering patterns.
 - `amount_usd` uses exchange rates derived from the dataset's own cross-currency rows.
 - `pattern` and `attempt_id` come from the patterns file and are used only for evaluation.
 
-## Tests
+## Detection rules
+
+Run from `backend/` after loading data:
 
 ```sh
-cd backend && python -m pytest
+python -m fraudring.detection.run                         # all rules with default thresholds
+python -m fraudring.detection.run --fan-in-min-senders 10 # any threshold can be overridden
 ```
+
+This runs three Cypher rules, stores each hit as an `(:Alert)` with a readable
+reason, and groups alerts that share accounts into `(:Ring)`s using GDS weakly
+connected components over the flagged subgraph.
+
+| Rule | Flags | Defaults |
+|---|---|---|
+| Cycle | money leaves an account and returns, with time-ordered hops, each hop passing on a similar USD amount | ≤ 12 hops, within 96 h, ±20% per hop |
+| Fan-in | one account receives from many distinct senders in a sliding window | ≥ 8 senders within 96 h |
+| Fan-out | one account sends to many distinct receivers in a sliding window | ≥ 8 receivers within 96 h |
+
+Fan rules skip high-volume hubs (more than 1,000 edges; 15 accounts in HI-Small).
+
+### Choosing the thresholds
+
+`python -m fraudring.detection.sweep` measures, for each threshold setting, the
+share of ground-truth attempts captured, the query runtime and the alert volume.
+It writes `results/sweep_*.csv` and `results/sweep_*.png`. The defaults above
+sit at the knee of those curves. The reasoning is recorded in
+`backend/fraudring/detection/config.py`.
+
+## Tests
+
+Unit tests need nothing running. The rule tests use a separate, throwaway Neo4j
+so they never touch the loaded dataset:
+
+```sh
+docker compose --profile test up -d neo4j-test
+cd backend && python -m pytest
+docker compose --profile test stop neo4j-test
+```
+
+Without `neo4j-test` running, the database tests are skipped.
