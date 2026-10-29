@@ -56,17 +56,8 @@ YIELD nodeId, componentId
 RETURN gds.util.asNode(nodeId).id AS account, componentId AS component
 """
 
-WRITE_RINGS = """
-UNWIND $rings AS ring
-CREATE (r:Ring {id: ring.id})
-WITH r, ring
-CALL (r, ring) {
-  UNWIND ring.core AS aid
-  MATCH (:Account {id: aid})<-[c:INVOLVES]-(al:Alert)
-  WHERE c.role IN $core
-  WITH DISTINCT al
-  MERGE (al)-[:PART_OF]->(r)
-}
+# Members are every account of every alert in the ring; stats are recomputed from them.
+FILL_RING = """
 CALL (r) {
   MATCH (r)<-[:PART_OF]-(:Alert)-[:INVOLVES]->(a:Account)
   WITH DISTINCT a
@@ -82,6 +73,34 @@ CALL (r) {
 }
 SET r.alert_count = alerts, r.total_usd = total, r.size = size
 """
+
+WRITE_RINGS = """
+UNWIND $rings AS ring
+CREATE (r:Ring {id: ring.id})
+WITH r, ring
+CALL (r, ring) {
+  UNWIND ring.core AS aid
+  MATCH (:Account {id: aid})<-[c:INVOLVES]-(al:Alert)
+  WHERE c.role IN $core
+  WITH DISTINCT al
+  MERGE (al)-[:PART_OF]->(r)
+}
+""" + FILL_RING
+
+# An existing ring that already holds one of this alert's core accounts as core.
+FIND_RING = """
+MATCH (al:Alert {id: $id})-[c:INVOLVES]->(:Account)<-[c2:INVOLVES]-(other:Alert)-[:PART_OF]->(r:Ring)
+WHERE c.role IN $core AND c2.role IN $core AND other <> al
+RETURN r.id AS ring
+LIMIT 1
+"""
+
+ATTACH = """
+MATCH (al:Alert {id: $alert})
+MERGE (r:Ring {id: $ring})
+MERGE (al)-[:PART_OF]->(r)
+WITH r
+""" + FILL_RING
 
 
 def drop_projection(driver: Driver) -> None:
@@ -112,3 +131,21 @@ def build_rings(driver: Driver) -> list[list[str]]:
         "MATCH (r:Ring)<-[:IN_RING]-(a:Account) RETURN r.id AS id, collect(a.id) AS accounts"
     ).records
     return sorted((sorted(r["accounts"]) for r in rings), key=lambda a: (-len(a), a[0]))
+
+
+def attach_to_rings(driver: Driver, alert_ids: list[str]) -> list[str]:
+    """Place newly written alerts into rings without recomputing all of them.
+
+    An alert joins the ring of another alert that shares one of its core
+    accounts, or else starts a new ring. That's the same rule as the full
+    rebuild for the shared-account case. It doesn't look for linking
+    transactions, so the next full run may still merge rings this left apart.
+    Returns the ring ID of each alert.
+    """
+    ring_ids = []
+    for alert_id in alert_ids:
+        found = driver.execute_query(FIND_RING, id=alert_id, core=CORE_ROLES).records
+        ring_id = found[0]["ring"] if found else f"ring-{alert_id}"
+        driver.execute_query(ATTACH, alert=alert_id, ring=ring_id)
+        ring_ids.append(ring_id)
+    return ring_ids
